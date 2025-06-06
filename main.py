@@ -2,7 +2,6 @@ import json
 import os
 import time
 from youtubesearchpython import VideosSearch
-import yt_dlp
 import openai
 import gspread
 from google.oauth2.service_account import Credentials
@@ -10,7 +9,7 @@ from datetime import datetime
 
 # === 환경설정 ===
 BRANDS = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
-SHEET_ID = "1j9K91M2TjxYtlt4senMTRANo9rMzpK7lvewmhJ__zNQ"
+SHEET_ID = "YOUR_GOOGLE_SHEET_ID"
 YOUTUBE_DATA_SHEET = "YoutubeData"
 YOUTUBE_INSIGHTS_SHEET = "YoutubeInsights"
 
@@ -32,21 +31,9 @@ def search_videos(brand):
     videos_search = VideosSearch(brand, limit=3)
     return videos_search.result()['result']
 
-def extract_video_info(url):
-    ydl_opts = {'skip_download': True, 'quiet': True}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        return {
-            "title": info.get("title"),
-            "like_count": info.get("like_count"),
-            "comment_count": info.get("comment_count"),
-            "description": info.get("description"),
-            "url": url
-        }
-
-def analyze_with_gpt(title, description):
-    prompt = f"""유튜브 영상 제목과 설명을 기반으로 해당 브랜드가 어떤 마케팅 메시지를 전달하고 있는지 요약해줘.\n
-제목: {title}\n설명: {description[:500]}"""
+def analyze_with_gpt(title):
+    prompt = f"""유튜브 영상 제목을 기반으로 해당 브랜드가 어떤 마케팅 메시지를 전달하고 있는지 2문장 이내로 요약해줘.\n
+제목: {title}"""
     response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
@@ -61,22 +48,22 @@ def main():
     for brand in BRANDS:
         videos = search_videos(brand)
         for video in videos:
-            url = video['link']
-            info = extract_video_info(url)
-
-            summary = analyze_with_gpt(info['title'], info['description'] or "")
-            keywords = ", ".join(info['description'].split()[:5])
+            title = video.get("title")
+            link = video.get("link")
+            snippet = video.get("descriptionSnippet", [])
+            keywords = ", ".join([d.get("text", "") for d in snippet])
+            
+            summary = analyze_with_gpt(title)
 
             # YoutubeData
             data_row = [
-                today, brand, info['title'], info['comment_count'], info['like_count'],
-                "", keywords, url
+                today, brand, title, "", "", "", keywords, link
             ]
             append_to_sheet(youtube_data_ws, data_row)
 
             # YoutubeInsights
             insight_row = [
-                today, brand, info['title'], keywords, summary, url
+                today, brand, title, keywords, summary, link
             ]
             append_to_sheet(youtube_insight_ws, insight_row)
 
