@@ -18,7 +18,11 @@ YOUTUBE_INSIGHTS_SHEET = "YoutubeInsights"
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # === Google Sheets 인증 ===
-creds = Credentials.from_service_account_info(json.loads(os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")))
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+creds = Credentials.from_service_account_info(
+    json.loads(os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")),
+    scopes=SCOPES
+)
 gc = gspread.authorize(creds)
 sh = gc.open_by_key(SHEET_ID)
 youtube_data_ws = sh.worksheet(YOUTUBE_DATA_SHEET)
