@@ -2,7 +2,7 @@ import json
 import os
 import time
 from youtubesearchpython import VideosSearch
-import openai
+from openai import OpenAI
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
@@ -13,8 +13,8 @@ SHEET_ID = "1j9K91M2TjxYtlt4senMTRANo9rMzpK7lvewmhJ__zNQ"
 YOUTUBE_DATA_SHEET = "YoutubeData"
 YOUTUBE_INSIGHTS_SHEET = "YoutubeInsights"
 
-# === API 키 ===
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# === OpenAI API 설정 ===
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # === Google Sheets 인증 ===
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -32,9 +32,8 @@ def search_videos(brand):
     return videos_search.result()['result']
 
 def analyze_with_gpt(title):
-    prompt = f"""유튜브 영상 제목을 기반으로 해당 브랜드가 어떤 마케팅 메시지를 전달하고 있는지 2문장 이내로 요약해줘.\n
-제목: {title}"""
-    response = openai.ChatCompletion.create(
+    prompt = f"""유튜브 영상 제목을 기반으로 해당 브랜드가 어떤 마케팅 메시지를 전달하고 있는지 2문장 이내로 요약해줘.\n\n제목: {title}"""
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
