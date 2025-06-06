@@ -10,7 +10,7 @@ from datetime import datetime
 
 # === 환경설정 ===
 BRANDS = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
-SHEET_ID = "YOUR_GOOGLE_SHEET_ID"
+SHEET_ID = "1j9K91M2TjxYtlt4senMTRANo9rMzpK7lvewmhJ__zNQ"
 YOUTUBE_DATA_SHEET = "YoutubeData"
 YOUTUBE_INSIGHTS_SHEET = "YoutubeInsights"
 
